@@ -4,6 +4,7 @@
   "scripts": {
     "build": "prisma generate && react-router build",
     "postinstall": "prisma generate",
+    "setup": "prisma migrate deploy",
     "dev": "shopify app dev",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",

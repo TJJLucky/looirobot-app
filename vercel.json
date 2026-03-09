@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build && npx prisma db push",
   "installCommand": "npm install",
   "outputDirectory": "build/client"
 }
