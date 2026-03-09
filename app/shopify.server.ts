@@ -24,10 +24,10 @@ import prisma from "./db.server";
  * 配置应用的 API 凭证、权限范围、分发方式等
  */
 const shopify = shopifyApp({
-  // Shopify API 密钥，从环境变量读取
+  // Shopify Client ID (公开的)
   apiKey: process.env.SHOPIFY_API_KEY,
 
-  // Shopify API 密钥，从环境变量读取
+  // Shopify Client Secret (私密的，用于签名)
   apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
 
   // 使用的 API 版本

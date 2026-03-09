@@ -39,7 +39,7 @@ export default function Index() {
           Welcome to your Shopify app! Start building your app here.
         </s-paragraph>
       </s-section>
-      <s-section heading="Welcome1">
+      <s-section heading="new Welcome">
         <s-paragraph>
           Welcome to your Shopify app! Start building your app here.
         </s-paragraph>
