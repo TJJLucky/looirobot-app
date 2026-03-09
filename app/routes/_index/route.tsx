@@ -44,7 +44,8 @@ export default function App() {
         <h1 className={styles.heading}>A short heading about [your app]</h1>
         {/* 应用标语 */}
         <p className={styles.text}>
-          A tagline about [your app] that describes your value proposition.
+          2026.3.9 A tagline about [your app] that describes your value
+          proposition.
         </p>
 
         {/* 登录表单 - 用于手动输入店铺域名 */}
