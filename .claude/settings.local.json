@@ -1,0 +1,11 @@
+{
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "shopify-dev-mcp"
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(cmd /c \"del d:\\\\Project\\\\Next\\\\looirobot-app\\\\app\\\\routes\\\\app.additional.tsx\")"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "267d449489a636767c76990778a9a085"
+client_id = "23ff2d28782a0e6e36ac91e773bdafab"
 name = "looirobot-app"
 application_url = "https://example.com"
 embedded = true
