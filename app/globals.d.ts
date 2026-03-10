@@ -9,3 +9,15 @@
  * 这样可以在组件中导入 CSS 文件并获得类型提示
  */
 declare module "*.css";
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "s-app-nav": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      >;
+    }
+  }
+}
+
+export {};

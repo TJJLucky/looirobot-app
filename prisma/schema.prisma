@@ -1,34 +1,26 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// ============================================
+// Prisma Schema - 主配置文件
+// ============================================
+//
+// 📁 多文件 Schema 结构：
+//    prisma/
+//    ├── migrations/
+//    ├── models/          ← 模型定义按领域分组
+//    │   ├── auth.prisma
+//    │   └── application.prisma
+//    └── schema.prisma    ← generator + datasource (此文件)
+//
+// 💡 Prisma ORM v6+ 原生支持多文件 schema
+//    所有 .prisma 文件中的模型可以互相引用，无需显式导入
+//
+// 📖 了解更多：https://pris.ly/d/multi-file-schema
+// ============================================
 
 generator client {
   provider = "prisma-client-js"
 }
 
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
-  refreshToken        String?
-  refreshTokenExpires DateTime?
 }

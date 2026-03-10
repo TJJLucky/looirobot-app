@@ -3,10 +3,16 @@
   "private": true,
   "scripts": {
     "dev": "shopify app dev",
-    "build": "prisma generate && react-router build",
+    "build": "prisma generate --schema ./prisma && react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
-    "typecheck": "react-router typegen && tsc --noEmit"
+    "typecheck": "react-router typegen && tsc --noEmit",
+    "db:generate": "prisma generate --schema ./prisma",
+    "db:migrate": "prisma migrate dev --schema ./prisma",
+    "db:push": "prisma db push --schema ./prisma",
+    "db:studio": "prisma studio --schema ./prisma",
+    "db:status": "prisma migrate status --schema ./prisma",
+    "db:reset": "prisma migrate reset --schema ./prisma"
   },
   "type": "module",
   "engines": {

@@ -45,7 +45,6 @@ export default function App() {
       <s-app-nav>
         <s-link href="/app">Home</s-link>
       </s-app-nav>
-
       {/* 子路由出口 - 渲染 /app 下的子页面 */}
       <Outlet />
     </AppProvider>
