@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: looirobot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: looirobot
+      POSTGRES_PASSWORD: looirobot
+      POSTGRES_DB: looirobot_app
+    ports:
+      - "5433:5432"
+    volumes:
+      - looirobot_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U looirobot -d looirobot_app"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  looirobot_postgres_data:

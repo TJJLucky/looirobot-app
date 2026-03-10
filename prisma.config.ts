@@ -1,15 +1,18 @@
 /**
  * Prisma Configuration File
  *
- * 注意：此文件用于 Prisma ORM v7+
- * 当前项目使用 Prisma v6，此文件暂未生效
- *
- * 升级到 Prisma v7 后，此配置将自动生效，
- * 无需再在命令中添加 --schema 参数
+ * Prisma CLI 会优先读取此配置文件。
+ * 这里显式控制环境变量加载顺序：
+ * 1. 先加载 .env（默认/线上）
+ * 2. 再加载 .env.local（本地覆盖）
  */
 
 import { defineConfig, env } from "prisma/config";
-import "dotenv/config";
+import { config as loadEnv } from "dotenv";
+
+// Load default env first, then allow local overrides for development.
+loadEnv();
+loadEnv({ path: ".env.local", override: true }); // 本地有.env.local覆盖默认环境变量
 
 export default defineConfig({
   // 指定 schema 目录位置（包含 schema.prisma 和 models/）

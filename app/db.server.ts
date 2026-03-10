@@ -1,6 +1,6 @@
 /**
  * db.server.ts - 数据库连接配置
- * 使用 Prisma 作为 ORM 连接到 SQLite 数据库
+ * 使用 Prisma 作为 ORM 连接到 PostgreSQL 数据库
  */
 
 import { PrismaClient } from "@prisma/client";
