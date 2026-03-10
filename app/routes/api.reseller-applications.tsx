@@ -5,9 +5,9 @@
 
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { resellerApplicationService } from "../services";
-import type { CreateResellerApplicationDTO } from "../services";
 import type {
   ApiResponse,
+  CreateResellerApplicationDTO,
   PaginatedResult,
   ResellerApplicationType,
 } from "../types";
@@ -22,9 +22,19 @@ import type {
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   try {
     const url = new URL(request.url);
+    const id = url.searchParams.get("id");
     const email = url.searchParams.get("email");
     const page = parseInt(url.searchParams.get("page") || "1");
     const pageSize = parseInt(url.searchParams.get("pageSize") || "20");
+
+    // 如果提供了 id，查询单个申请
+    if (id) {
+      const application = await resellerApplicationService.findById(Number(id));
+      return Response.json({
+        success: true,
+        data: application,
+      } as ApiResponse<ResellerApplicationType | null>);
+    }
 
     // 如果提供了 email，查询单个申请
     if (email) {
@@ -78,7 +88,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // POST - 创建新申请
     if (method === "POST") {
       const body = await request.json();
-      const data: CreateResellerApplicationDTO = body;
+      const data: CreateResellerApplicationDTO = {
+        ...body,
+        status: 0,
+      };
 
       // 检查邮箱是否已存在
       const emailExists = await resellerApplicationService.emailExists(
@@ -116,6 +129,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           {
             success: false,
             error: "Missing application ID",
+          } as ApiResponse,
+          { status: 400 },
+        );
+      }
+
+      if (
+        updateData.status !== undefined &&
+        updateData.status !== 0 &&
+        updateData.status !== 1
+      ) {
+        return Response.json(
+          {
+            success: false,
+            error: "Invalid status",
+            message: "status 必须为 0（未审核）或 1（已审核）",
           } as ApiResponse,
           { status: 400 },
         );

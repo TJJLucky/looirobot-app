@@ -3,22 +3,25 @@
  * 便于在整个应用中统一导入类型
  */
 
+// Session 相关类型
 export type {
-  // 基础模型类型
   SessionType,
-  ResellerApplicationType,
-  // Prisma 查询类型
   SessionWhereInput,
   SessionCreateInput,
   SessionUpdateInput,
-  ResellerApplicationWhereInput,
-  ResellerApplicationCreateInput,
-  ResellerApplicationUpdateInput,
-  // 扩展类型
   SessionWithStatus,
-  PaginatedResult,
-  ResellerApplicationListItem,
-  ApiResponse,
-  // Prisma 命名空间
-  Prisma,
-} from "./models";
+} from "./session.model";
+
+// Reseller Application 相关类型
+export type {
+  ResellerApplicationType,
+  ResellerApplicationStatus,
+  CreateResellerApplicationDTO,
+  UpdateResellerApplicationDTO,
+} from "./reseller-application.model";
+
+// 通用类型
+export type { PaginatedResult, ApiResponse } from "./common.model";
+
+// Prisma 命名空间
+export { Prisma } from "@prisma/client";

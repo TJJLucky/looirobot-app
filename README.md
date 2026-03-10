@@ -10,6 +10,30 @@ Visit the [`shopify.dev` documentation](https://shopify.dev/docs/api/shopify-app
 
 If you have an existing Remix app that you want to upgrade to React Router, please follow the [upgrade guide](https://github.com/Shopify/shopify-app-template-react-router/wiki/Upgrading-from-Remix). Otherwise, please follow the quick start guide below.
 
+## Project Architecture
+
+This project follows a **Route → Service → Prisma** layered architecture with centralized type management:
+
+```
+Routes (app/routes)
+  - Page loaders/actions & API loaders/actions
+         ↓
+Services (app/services)
+  - Business logic & data access
+         ↓
+Prisma Client (app/db.server.ts)
+         ↓
+Database
+```
+
+**Keys:**
+- **Route Layer**: HTTP boundary, request parsing, call Services
+- **Service Layer**: Business rules & Prisma encapsulation
+- **Types Layer** (app/types): Unified type export, Prisma type bridge, DTO definitions
+- **Database Layer**: app/db.server.ts provides Prisma singleton
+
+For detailed architecture information, see [doc/ARCHITECTURE.md](doc/ARCHITECTURE.md) and [doc/PROJECT_STRUCTURE.md](doc/PROJECT_STRUCTURE.md).
+
 ## Quick start
 
 ### Prerequisites

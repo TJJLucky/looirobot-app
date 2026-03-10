@@ -4,36 +4,11 @@
  */
 
 import prisma from "../db.server";
-import type { LooiResellerApplication } from "@prisma/client";
-
-/**
- * 创建经销商申请的数据类型
- */
-export interface CreateResellerApplicationDTO {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumberPrefix: string;
-  phoneNumber: string;
-  companyName: string;
-  companySize: string;
-  jobTitle: string;
-  country: string;
-  physicalRetailStores?: string;
-  onlineStore?: string;
-  distributionWholesaleNetwork?: string;
-  others?: string;
-  mainProductsAndBrands: string;
-  looiAnnualProjectedSales: string;
-  technicianScaleAndAfterSalesProcess: string;
-  files: string[];
-}
-
-/**
- * 更新经销商申请的数据类型
- */
-export type UpdateResellerApplicationDTO =
-  Partial<CreateResellerApplicationDTO>;
+import type {
+  CreateResellerApplicationDTO,
+  ResellerApplicationType,
+  UpdateResellerApplicationDTO,
+} from "../types";
 
 export const resellerApplicationService = {
   /**
@@ -41,16 +16,36 @@ export const resellerApplicationService = {
    */
   async create(
     data: CreateResellerApplicationDTO,
-  ): Promise<LooiResellerApplication> {
+  ): Promise<ResellerApplicationType> {
     return prisma.looiResellerApplication.create({
-      data,
+      data: {
+        ...data,
+        status: 0,
+      },
+    });
+  },
+
+  /**
+   * 创建新申请（服务端自定义提交时间）
+   * createdAt 由服务端内部控制，前端无需传入
+   */
+  async createWithCreatedAt(
+    data: CreateResellerApplicationDTO,
+    createdAt: Date,
+  ): Promise<ResellerApplicationType> {
+    return prisma.looiResellerApplication.create({
+      data: {
+        ...data,
+        status: 0,
+        createdAt,
+      },
     });
   },
 
   /**
    * 根据 ID 查找申请
    */
-  async findById(id: number): Promise<LooiResellerApplication | null> {
+  async findById(id: number): Promise<ResellerApplicationType | null> {
     return prisma.looiResellerApplication.findUnique({
       where: { id },
     });
@@ -59,7 +54,7 @@ export const resellerApplicationService = {
   /**
    * 根据邮箱查找申请
    */
-  async findByEmail(email: string): Promise<LooiResellerApplication | null> {
+  async findByEmail(email: string): Promise<ResellerApplicationType | null> {
     return prisma.looiResellerApplication.findUnique({
       where: { email },
     });
@@ -72,7 +67,7 @@ export const resellerApplicationService = {
     skip?: number;
     take?: number;
     orderBy?: "asc" | "desc";
-  }): Promise<LooiResellerApplication[]> {
+  }): Promise<ResellerApplicationType[]> {
     const { skip = 0, take = 20, orderBy = "desc" } = params || {};
 
     return prisma.looiResellerApplication.findMany({
@@ -97,7 +92,7 @@ export const resellerApplicationService = {
   async update(
     id: number,
     data: UpdateResellerApplicationDTO,
-  ): Promise<LooiResellerApplication> {
+  ): Promise<ResellerApplicationType> {
     return prisma.looiResellerApplication.update({
       where: { id },
       data,
@@ -107,7 +102,7 @@ export const resellerApplicationService = {
   /**
    * 删除申请
    */
-  async delete(id: number): Promise<LooiResellerApplication> {
+  async delete(id: number): Promise<ResellerApplicationType> {
     return prisma.looiResellerApplication.delete({
       where: { id },
     });
@@ -116,7 +111,7 @@ export const resellerApplicationService = {
   /**
    * 根据国家/地区搜索
    */
-  async findByCountry(country: string): Promise<LooiResellerApplication[]> {
+  async findByCountry(country: string): Promise<ResellerApplicationType[]> {
     return prisma.looiResellerApplication.findMany({
       where: {
         country: {
@@ -135,7 +130,7 @@ export const resellerApplicationService = {
    */
   async searchByCompany(
     searchTerm: string,
-  ): Promise<LooiResellerApplication[]> {
+  ): Promise<ResellerApplicationType[]> {
     return prisma.looiResellerApplication.findMany({
       where: {
         companyName: {

@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "shopify app dev",
+    "dev:local": "npm run db:local:up && npm run db:push && shopify app dev",
     "db:local:up": "docker compose up -d postgres",
     "db:local:down": "docker compose down",
     "db:local:logs": "docker compose logs -f postgres",

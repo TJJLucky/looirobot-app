@@ -4,38 +4,41 @@
 // LOOI 经销商申请表单模型
 
 model LooiResellerApplication {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    // 基本信息
-    firstName         String // 名字
-    lastName          String // 姓氏
-    email             String @unique // 邮箱
-    phoneNumberPrefix String // 手机号前缀
-    phoneNumber       String // 手机号
+  // 审核状态: 0=未审核, 1=已审核
+  status Int @default(0)
 
-    // 公司信息
-    companyName String // 公司名
-    companySize String // 公司大小
-    jobTitle    String // 工作职位
-    country     String // 国家/城市
+  // 基本信息
+  firstName         String // 名字
+  lastName          String // 姓氏
+  email             String @unique // 邮箱
+  phoneNumberPrefix String // 手机号前缀
+  phoneNumber       String // 手机号
 
-    // 销售渠道
-    physicalRetailStores         String? // 是否有物理零售店
-    onlineStore                  String? // 是否有在线店铺及其类型
-    distributionWholesaleNetwork String? // 是否通过分销/批发网络
-    others                       String? // 其他销售渠道
+  // 公司信息
+  companyName String // 公司名
+  companySize String // 公司大小
+  jobTitle    String // 工作职位
+  country     String // 国家/城市
 
-    // 产品信息
-    mainProductsAndBrands    String // 主营产品及核心代理品牌
-    looiAnnualProjectedSales String // LOOI 年度预计销量
+  // 销售渠道
+  physicalRetailStores         String? // 是否有物理零售店
+  onlineStore                  String? // 是否有在线店铺及其类型
+  distributionWholesaleNetwork String? // 是否通过分销/批发网络
+  others                       String? // 其他销售渠道
 
-    // 运营信息
-    technicianScaleAndAfterSalesProcess String // 技术人员规模及售后服务流程
+  // 产品信息
+  mainProductsAndBrands    String // 主营产品及核心代理品牌
+  looiAnnualProjectedSales String // LOOI 年度预计销量
 
-    // 附件
-    files String[] // 附件 URL 列表
+  // 运营信息
+  technicianScaleAndAfterSalesProcess String // 技术人员规模及售后服务流程
 
-    // 时间戳
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  // 附件
+  files String[] // 附件 URL 列表
+
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

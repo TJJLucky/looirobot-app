@@ -1,234 +1,131 @@
 # 项目架构文档
 
-## 📁 项目结构
+## 架构总览
 
-```
-looirobot-app/
-├── app/
-│   ├── db.server.ts                    # Prisma 数据库连接
-│   ├── entry.server.tsx                # 服务端入口
-│   ├── root.tsx                        # 根组件
-│   ├── routes.ts                       # 路由配置
-│   ├── shopify.server.ts               # Shopify API 配置
-│   │
-│   ├── services/                       # 🆕 服务层（业务逻辑）
-│   │   ├── index.ts                   # 统一导出
-│   │   ├── session.service.ts         # 会话管理服务
-│   │   └── reseller-application.service.ts  # 经销商申请服务
-│   │
-│   ├── types/                          # 🆕 类型定义
-│   │   ├── index.ts                   # 统一导出
-│   │   └── models.ts                  # Prisma 模型类型
-│   │
-│   └── routes/                         # 路由文件
-│       ├── app.tsx                    # App 布局
-│       ├── app._index.tsx             # 首页
-│       ├── auth.$.tsx                 # 认证路由
-│       └── api.reseller-applications.tsx  # 🆕 经销商申请 API
-│
-├── prisma/
-│   ├── schema.prisma                   # 主 Schema 文件（generator + datasource）
-│   ├── README.md                       # 🆕 Prisma 使用文档
-│   │
-│   ├── models/                         # 🆕 模型定义（按领域分组）
-│   │   ├── auth.prisma                # 认证模块
-│   │   └── application.prisma         # 申请表单模块
-│   │
-│   └── migrations/                     # 数据库迁移历史
-│       └── ...
-│
-├── package.json
-├── tsconfig.json
-└── README.md
+当前项目采用 Route -> Service -> Prisma 的分层方式，类型通过 app/types 做统一中转导出。
+
+```text
+Routes (app/routes)
+  - 页面 loader/action
+  - API loader/action
+        |
+        v
+Services (app/services)
+  - 业务逻辑
+  - 数据访问封装
+        |
+        v
+Prisma Client (app/db.server.ts)
+        |
+        v
+PostgreSQL
 ```
 
-## 🏗️ 架构设计理念
+## 分层职责
 
-### 1. 分层架构
+### 1. Route 层
 
+位置：app/routes
+
+职责：
+- 处理 HTTP 边界（参数解析、状态码、响应结构）
+- 页面场景下在 loader/action 中编排请求流程
+- 调用 Service，不直接操作 Prisma
+
+示例文件：
+- app/routes/_index/route.tsx
+- app/routes/api.reseller-applications.tsx
+- app/routes/api.upload.tsx
+
+### 2. Service 层
+
+位置：app/services
+
+职责：
+- 承载业务规则与复用逻辑
+- 统一封装数据库访问
+- 向 Route 提供稳定的方法接口
+
+示例文件：
+- app/services/reseller-application.service.ts
+- app/services/session.service.ts
+
+### 3. 数据访问层
+
+位置：app/db.server.ts
+
+职责：
+- 提供 Prisma 单例
+- 避免开发环境热更新导致的多实例连接问题
+
+### 4. 类型中转层
+
+位置：app/types
+
+职责：
+- 统一导出业务类型、DTO、通用响应类型
+- 作为 Prisma 类型与业务代码之间的中转层
+- 业务代码优先从 app/types/index.ts 导入类型
+
+关键文件：
+- app/types/reseller-application.model.ts
+- app/types/common.model.ts
+- app/types/index.ts
+
+## 目录概览
+
+```text
+app/
+├── db.server.ts
+├── entry.server.tsx
+├── root.tsx
+├── routes.ts
+├── shopify.server.ts
+├── routes/
+│   ├── _index/route.tsx
+│   ├── api.reseller-applications.tsx
+│   ├── api.upload.tsx
+│   ├── app.tsx
+│   ├── app._index.tsx
+│   ├── auth.$.tsx
+│   ├── auth.login/route.tsx
+│   └── webhooks.*.tsx
+├── services/
+│   ├── index.ts
+│   ├── reseller-application.service.ts
+│   └── session.service.ts
+└── types/
+    ├── index.ts
+    ├── common.model.ts
+    ├── reseller-application.model.ts
+    └── session.model.ts
 ```
-┌─────────────────────────────────────┐
-│    Routes Layer (路由层)            │  ← API 端点、页面路由
-│    app/routes/*.tsx                 │
-└─────────────────────────────────────┘
-              ↓
-┌─────────────────────────────────────┐
-│    Service Layer (服务层)           │  ← 业务逻辑、数据处理
-│    app/services/*.service.ts        │
-└─────────────────────────────────────┘
-              ↓
-┌─────────────────────────────────────┐
-│    Data Access Layer (数据访问层)   │  ← Prisma ORM
-│    app/db.server.ts                 │
-└─────────────────────────────────────┘
-              ↓
-┌─────────────────────────────────────┐
-│    Database (数据库)                 │  ← PostgreSQL
-└─────────────────────────────────────┘
-```
 
-### 2. 服务层的优势
+## 类型规范
 
-✅ **代码复用** - 多个路由可以复用同一个服务方法  
-✅ **易于测试** - 服务层可以独立测试，无需模拟完整的 HTTP 请求  
-✅ **业务逻辑集中** - 将复杂的业务逻辑从路由中分离  
-✅ **类型安全** - 完整的 TypeScript 类型支持  
+- DTO 在 app/types 中定义并统一导出
+- Service 不重复声明 DTO
+- Route/Service 使用 app/types/index.ts 作为类型导入入口
 
-### 3. 类型系统
+示例：
 
 ```typescript
-// 从 Prisma 生成的类型
-import type { LooiResellerApplication } from "@prisma/client";
-
-// 业务层自定义类型
-import type { CreateResellerApplicationDTO } from "../services";
-
-// 应用层扩展类型
-import type { ApiResponse, PaginatedResult } from "../types";
+import type {
+  ApiResponse,
+  CreateResellerApplicationDTO,
+  ResellerApplicationType,
+} from "../types";
 ```
 
-## 📝 使用示例
+## 实践约束
 
-### 在路由中使用服务层
+- Route 保持轻量：只做边界处理和流程编排
+- 业务逻辑放到 Service
+- 不在 Route 中直接调用 Prisma
+- 统一响应 envelope：success、data、error、message
 
-```typescript
-// app/routes/api.reseller-applications.tsx
-import { resellerApplicationService } from "../services";
+## 相关文档
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  // 直接调用服务方法，无需关心数据库实现
-  const applications = await resellerApplicationService.findAll({
-    skip: 0,
-    take: 20,
-  });
-  
-  return json({ data: applications });
-};
-```
-
-### 创建新的服务
-
-```typescript
-// app/services/product.service.ts
-import prisma from "../db.server";
-
-export const productService = {
-  async findAll() {
-    return prisma.product.findMany();
-  },
-  
-  async create(data) {
-    return prisma.product.create({ data });
-  },
-};
-
-// 在 app/services/index.ts 中导出
-export { productService } from "./product.service";
-```
-
-## 🔧 开发工作流
-
-### 添加新表
-
-1. **在 `models/` 中创建新文件**
-   ```bash
-   # 在 prisma/models/ 目录创建新的模型文件
-   touch prisma/models/product.prisma
-   ```
-
-2. **编写模型定义**
-   ```prisma
-   // prisma/models/product.prisma
-   
-   model Product {
-     id        Int      @id @default(autoincrement())
-     title     String
-     price     Float
-     createdAt DateTime @default(now())
-   }
-   ```
-
-3. **运行迁移**
-   ```bash
-   npm run db:migrate
-   # 输入迁移名称：add_product_table
-   ```
-
-4. **自动生效** - Prisma 会自动识别所有 `.prisma` 文件
-
-## 📚 命名规范
-
-| 对象 | 规范 | 示例 |
-|-----|------|------|
-| 模型 | PascalCase | `LooiResellerApplication` |
-| 字段 | camelCase | `firstName`, `createdAt` |
-| 服务文件 | kebab-case.service.ts | `reseller-application.service.ts` |
-| 服务对象 | camelCase + Service | `resellerApplicationService` |
-| 路由文件 | kebab-case.tsx | `api.reseller-applications.tsx` |
-| DTO 类型 | PascalCase + DTO | `CreateResellerApplicationDTO` |
-
-## 🎯 最佳实践
-
-### ✅ 推荐做法
-
-```typescript
-// ✅ 在路由中调用服务层
-export const loader = async () => {
-  const data = await resellerApplicationService.findAll();
-  return json(data);
-};
-
-// ✅ 使用 DTO 定义清晰的接口
-interface CreateProductDTO {
-  title: string;
-  price: number;
-}
-
-// ✅ 统一的错误处理
-try {
-  const result = await service.create(data);
-  return json({ success: true, data: result });
-} catch (error) {
-  return json({ success: false, error: error.message }, { status: 500 });
-}
-```
-
-### ❌ 避免做法
-
-```typescript
-// ❌ 在路由中直接操作数据库
-export const loader = async () => {
-  const data = await prisma.product.findMany(); // 不推荐
-  return json(data);
-};
-
-// ❌ 缺少类型定义
-async function create(data: any) { // 不推荐使用 any
-  return prisma.product.create({ data });
-}
-```
-
-## 🔍 常用命令
-
-```bash
-# 生成 Prisma Client
-npx prisma generate
-
-# 创建迁移
-npx prisma migrate dev --name description
-
-# 可视化管理数据库
-npx prisma studio
-
-# 检查迁移状态
-npx prisma migrate status
-
-# 重置数据库（慎用）
-npx prisma migrate reset
-```
-
-## 📖 参考资料
-
-- [Prisma 文档](https://www.prisma.io/docs)
-- [React Router 文档](https://reactrouter.com)
-- [Shopify App React Router](https://shopify.dev/docs/api/shopify-app-react-router)
+- doc/PROJECT_STRUCTURE.md
+- doc/VERCEL_DEPLOYMENT.md
+- prisma/README.md

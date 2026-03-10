@@ -20,12 +20,15 @@
    │   ├── session.service.ts
    │   └── reseller-application.service.ts
    │
-   ├── types/               # 类型定义
+   ├── types/               # 类型中转与统一导出
    │   ├── index.ts
-   │   └── models.ts
+   │   ├── common.model.ts
+   │   ├── session.model.ts
+   │   └── reseller-application.model.ts
    │
    └── routes/
-       └── api.reseller-applications.tsx  # 示例 API
+       ├── api.reseller-applications.tsx  # 示例 API
+       └── api.upload.tsx                 # 上传代理 API
 
 ✅ doc/
    └── ARCHITECTURE.md      # 架构文档
