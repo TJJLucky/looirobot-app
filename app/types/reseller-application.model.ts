@@ -5,7 +5,7 @@
 import type { LooiResellerApplication } from "@prisma/client";
 
 export type ResellerApplicationType = LooiResellerApplication;
-export type ResellerApplicationStatus = 0 | 1;
+export type ResellerApplicationStatusType = -1 | 0 | 1 | 2 | 3; //-1=删除， 0=未审核, 1=已审核, 2=审核不通过, 3=重点关注
 
 export interface CreateResellerApplicationDTO {
   firstName: string;
@@ -25,7 +25,7 @@ export interface CreateResellerApplicationDTO {
   looiAnnualProjectedSales: string;
   technicianScaleAndAfterSalesProcess: string;
   files: string[];
-  status?: ResellerApplicationStatus;
+  status?: ResellerApplicationStatusType;
 }
 
 export type UpdateResellerApplicationDTO =

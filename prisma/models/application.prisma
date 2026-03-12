@@ -6,7 +6,7 @@
 model LooiResellerApplication {
   id Int @id @default(autoincrement())
 
-  // 审核状态: 0=未审核, 1=已审核
+  // 审核状态: 0=未审核, 1=已审核 ， 2=审核不通过， 3=重点关注
   status Int @default(0)
 
   // 基本信息

@@ -15,7 +15,7 @@ export type {
 // Reseller Application 相关类型
 export type {
   ResellerApplicationType,
-  ResellerApplicationStatus,
+  ResellerApplicationStatusType,
   CreateResellerApplicationDTO,
   UpdateResellerApplicationDTO,
 } from "./reseller-application.model";
