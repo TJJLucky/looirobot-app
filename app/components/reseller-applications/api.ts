@@ -82,3 +82,18 @@ export const updateApplicationStatus = async (
 
   return json.data;
 };
+
+export const deleteApplication = async (id: number): Promise<void> => {
+  const response = await fetch(`/api/admin/reseller-applications/${id}`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  const json = (await response.json()) as ApiResponse<null>;
+
+  if (!response.ok || !json.success) {
+    throw new Error(json.message || "删除失败");
+  }
+};

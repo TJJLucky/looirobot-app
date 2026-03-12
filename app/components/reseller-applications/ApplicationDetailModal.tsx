@@ -5,7 +5,7 @@ import type {
   ResellerApplicationType,
 } from "../../types";
 import { STATUS_META, STATUS_OPTIONS } from "./constants";
-import { updateApplicationStatus } from "./api";
+import { deleteApplication, updateApplicationStatus } from "./api";
 import { formatDateTime } from "./utils";
 
 type Props = {
@@ -14,6 +14,7 @@ type Props = {
   errorMessage: string | null;
   application: ResellerApplicationType | null;
   onClose: () => void;
+  onDeleted: () => void;
   onStatusUpdated: (updated: ResellerApplicationType) => void;
 };
 
@@ -25,10 +26,12 @@ export function ApplicationDetailModal({
   errorMessage,
   application,
   onClose,
+  onDeleted,
   onStatusUpdated,
 }: Props) {
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,6 +46,7 @@ export function ApplicationDetailModal({
     if (!open) {
       setSubmitError(null);
       setSubmitting(false);
+      setDeleting(false);
     }
   }, [open]);
 
@@ -96,6 +100,29 @@ export function ApplicationDetailModal({
     }
   };
 
+  const handleDelete = async () => {
+    if (!application) {
+      return;
+    }
+
+    const confirmed = window.confirm("确认删除该申请吗？删除后不可恢复。");
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleting(true);
+    setSubmitError(null);
+
+    try {
+      await deleteApplication(application.id);
+      onDeleted();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "删除失败");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (!open) {
     return null;
   }
@@ -105,7 +132,7 @@ export function ApplicationDetailModal({
       <div style={panelStyle}>
         <div style={headerStyle}>
           <h3 style={titleStyle}>经销商申请详情</h3>
-          <s-button variant="secondary" onClick={onClose}>
+          <s-button variant="secondary" onClick={onClose} disabled={deleting}>
             关闭
           </s-button>
         </div>
@@ -221,9 +248,18 @@ export function ApplicationDetailModal({
                       variant="primary"
                       onClick={handleUpdateStatus}
                       loading={submitting}
-                      disabled={submitting}
+                      disabled={submitting || deleting}
                     >
                       更新状态
+                    </s-button>
+                    <s-button
+                      tone="critical"
+                      variant="secondary"
+                      onClick={handleDelete}
+                      loading={deleting}
+                      disabled={submitting || deleting}
+                    >
+                      删除申请
                     </s-button>
                   </s-stack>
                   {submitError && (

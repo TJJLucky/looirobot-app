@@ -114,6 +114,11 @@ export default function ResellerApplications() {
     void fetchList();
   };
 
+  const handleDeleted = () => {
+    handleCloseDetail();
+    void fetchList();
+  };
+
   const handleStatusFilter = (status: string | null) => {
     const normalizedStatus =
       status === null || status === "" || status === "all" || status === "null"
@@ -183,6 +188,7 @@ export default function ResellerApplications() {
         errorMessage={detailErrorMessage}
         application={detailApplication}
         onClose={handleCloseDetail}
+        onDeleted={handleDeleted}
         onStatusUpdated={handleStatusUpdated}
       />
     </s-page>
