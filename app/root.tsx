@@ -3,6 +3,7 @@
  * 整个应用的 HTML 模板入口，定义页面的基本结构
  */
 
+import "./styles/base.css";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
 /**

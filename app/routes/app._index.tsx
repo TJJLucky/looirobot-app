@@ -3,23 +3,19 @@
  * 用户安装应用后访问的主页面
  */
 
-import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
+import type { HeadersFunction } from "react-router";
 
 // 导入 Shopify 边界处理
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
 // 导入认证函数
-import { authenticate } from "../shopify.server";
 
 /**
- * loader - 服务端加载函数
- * 验证用户登录状态，可在此时获取店铺信息
+ * loader - 页面数据加载
+ * 登录验证已在父路由 app.tsx 中完成
  */
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  // 验证用户是否已登录，未登录会跳转到登录页面
-  await authenticate.admin(request);
-
-  // 返回页面数据
+export const loader = async () => {
+  // 登录验证已在 app.tsx 父路由中完成
   return {
     shop: "Demo Shop",
   };
@@ -47,11 +43,3 @@ export default function Index() {
     </s-page>
   );
 }
-
-/**
- * headers - 设置响应头
- * 用于 Shopify API 验证
- */
-export const headers: HeadersFunction = (headersArgs) => {
-  return boundary.headers(headersArgs);
-};
