@@ -21,6 +21,7 @@ export interface PaginatedResult<T> {
  * API 响应通用格式
  */
 export interface ApiResponse<T = unknown> {
+  code?: number;
   success: boolean;
   data?: T;
   error?: string;

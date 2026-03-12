@@ -3,23 +3,35 @@
  * 公开接口：提交经销商申请
  */
 
-import type { ActionFunctionArgs } from "react-router";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { resellerApplicationService } from "../services";
 import type {
   ApiResponse,
   CreateResellerApplicationDTO,
   ResellerApplicationType,
 } from "../types";
+import {
+  handlePublicCorsPreflight,
+  jsonWithPublicCors,
+} from "../utils/cors.server";
 
 const methodNotAllowed = () =>
-  Response.json(
+  jsonWithPublicCors(
     {
+      code: 405,
       success: false,
       error: "Method not allowed",
-      message: "只支持 POST 请求",
+      message: "只支持 POST 和 OPTIONS 请求",
     } as ApiResponse,
-    { status: 405 },
+    405,
   );
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const preflight = handlePublicCorsPreflight(request);
+  if (preflight) return preflight;
+
+  return methodNotAllowed();
+};
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
@@ -31,25 +43,27 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     try {
       body = await request.json();
     } catch {
-      return Response.json(
+      return jsonWithPublicCors(
         {
+          code: 400,
           success: false,
           error: "Invalid request body",
           message: "请求体必须是合法 JSON",
         } as ApiResponse,
-        { status: 400 },
+        400,
       );
     }
 
     const data = body as CreateResellerApplicationDTO;
     if (!data?.email) {
-      return Response.json(
+      return jsonWithPublicCors(
         {
+          code: 400,
           success: false,
           error: "Invalid request body",
           message: "email 为必填字段",
         } as ApiResponse,
-        { status: 400 },
+        400,
       );
     }
 
@@ -57,13 +71,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       data.email,
     );
     if (emailExists) {
-      return Response.json(
+      return jsonWithPublicCors(
         {
+          code: 400,
           success: false,
           error: "Email already exists",
           message: "该邮箱已经提交过申请",
         } as ApiResponse,
-        { status: 400 },
+        400,
       );
     }
 
@@ -72,23 +87,25 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       status: 0,
     });
 
-    return Response.json(
+    return jsonWithPublicCors(
       {
+        code: 201,
         success: true,
         data: application,
         message: "申请提交成功",
       } as ApiResponse<ResellerApplicationType>,
-      { status: 201 },
+      201,
     );
   } catch (error) {
     console.error("Error creating application:", error);
-    return Response.json(
+    return jsonWithPublicCors(
       {
+        code: 500,
         success: false,
         error: "Server error",
         message: "服务器内部错误",
       } as ApiResponse,
-      { status: 500 },
+      500,
     );
   }
 };
