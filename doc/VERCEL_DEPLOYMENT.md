@@ -1,191 +1,145 @@
 # Shopify App Vercel 部署指南
 
-## 部署路径
+## 部署概览
 
+当前仓库面向 Vercel 部署，构建流程如下：
+
+```text
+Git Push
+  -> Vercel Install
+  -> npm run build
+  -> prisma db push
+  -> 输出 build/client 与服务端构建结果
 ```
-GitHub (main branch)
-    ↓ git push
-Vercel (自动构建)
-    ↓ prisma generate + db push
-Prisma Cloud Database (PostgreSQL)
-```
 
-## 问题解决思路
-
-### 1. 500 错误 - Application Error
-
-**原因**：Prisma 客户端未生成，数据库表未创建
-
-**解决**：
-- 添加 `postinstall` 和 `build` 脚本自动生成 Prisma 客户端
-- 使用 `prisma db push` 同步数据库表结构
+仓库中的实际 Vercel 配置：
 
 ```json
-// package.json
 {
-  "scripts": {
-    "build": "prisma generate && react-router build",
-    "postinstall": "prisma generate"
-  }
+  "buildCommand": "npm run build && npx prisma db push",
+  "installCommand": "npm install",
+  "outputDirectory": "build/client"
 }
 ```
 
-```json
-// vercel.json
-{
-  "buildCommand": "npm run build && npx prisma db push"
-}
-```
+## 部署前提
 
-### 2. 数据库类型错误
+### 1. 必需环境变量
 
-**原因**：迁移文件使用 SQLite 语法 (DATETIME)，但 PostgreSQL 不支持
+Vercel 至少需要配置以下变量：
 
-**解决**：
-- 删除旧的迁移文件夹 `prisma/migrations/`
-- 使用 `prisma db push` 直接根据 schema 同步，不使用迁移文件
+| 变量名 | 说明 |
+| --- | --- |
+| SHOPIFY_API_KEY | Shopify App Client ID |
+| SHOPIFY_API_SECRET | Shopify App Client Secret |
+| SHOPIFY_APP_URL | 线上应用域名，例如 `https://your-app.vercel.app` |
+| SCOPES | Shopify 权限范围 |
+| DATABASE_URL | PostgreSQL 连接串 |
+| NODE_ENV | 生产环境请设为 `production` |
 
-### 3. 环境变量配置
+### 2. Shopify 应用地址
 
-Vercel 需要配置以下环境变量：
-
-| 变量名 | 说明 | 示例 |
-|--------|------|------|
-| `SHOPIFY_API_KEY` | Shopify Client ID | `23ff2d...` |
-| `SHOPIFY_API_SECRET` | Shopify Client Secret | `shpss_...` |
-| `SHOPIFY_APP_URL` | 应用部署 URL | `https://xxx.vercel.app` |
-| `SCOPES` | OAuth 权限范围 | `write_products,...` |
-| `DATABASE_URL` | 数据库连接字符串 | `postgres://...` |
-
-## 配置注意点
-
-### 1. shopify.app.looirobot-app.toml
+生产环境需要确保 [shopify.app.toml](../shopify.app.toml) 中的地址与实际部署域名一致：
 
 ```toml
 application_url = "https://your-app.vercel.app"
 
 [auth]
-redirect_urls = [ "https://your-app.vercel.app/api/auth" ]
+redirect_urls = ["https://your-app.vercel.app/api/auth"]
 ```
 
-### 2. .env 文件
+说明：
 
-```env
-SHOPIFY_API_KEY=your_key
-SHOPIFY_API_SECRET=your_secret
-SHOPIFY_APP_URL=https://your-app.vercel.app
-SCOPES=write_metaobject_definitions,write_metaobjects,write_products
-DATABASE_URL=postgres://...
-```
+- 开发环境可以依赖 Shopify CLI 自动更新地址
+- 生产环境必须显式配置为正式域名
 
-### 3. Prisma Schema
+### 3. 数据库要求
 
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-```
+- 生产环境应使用 PostgreSQL
+- Prisma datasource 必须指向 `postgresql`
+- 线上部署推荐使用 `prisma db push` 保持 schema 与数据库同步
 
-**注意**：必须使用 `postgresql`，不是 `sqlite`
+## 部署步骤
 
-## 数据库注意点
+### 1. 准备 Vercel 项目
 
-### 1. 数据库选择
+- 将仓库连接到 Vercel
+- 在 Project Settings 中配置环境变量
+- 确认构建命令保持为仓库内 `vercel.json` 所声明的值
 
-- **开发环境**：可使用 SQLite 本地文件
-- **生产环境（Vercel）**：必须使用云数据库（PostgreSQL）
+### 2. 准备数据库
 
-### 2. Prisma Cloud Database
+- 创建可公网访问的 PostgreSQL 实例
+- 将连接串配置为 `DATABASE_URL`
+- 首次部署前确认数据库账号有建表权限
 
-获取连接字符串：
-1. 登录 Vercel → Storage
-2. 选择 PostgreSQL 数据库
-3. 复制连接字符串
-
-格式：
-```
-postgres://username:password@host:5432/database?sslmode=require
-```
-
-### 3. 数据库同步
-
-使用 `prisma db push` 而非 `prisma migrate deploy`：
-- `migrate deploy` 需要迁移文件，可能有 SQL 兼容问题
-- `db push` 直接根据 schema 同步，自动适配数据库类型
-
-### 4. migrate deploy 失败问题（P3009 错误）
-
-**问题描述**：
-```
-Error: P3009
-migrate found failed migrations in the target database
-```
-
-**原因**：
-- 迁移文件使用 SQLite 语法（DATETIME），PostgreSQL 不支持
-- 失败后 Prisma 会记录状态，阻塞后续操作
-
-**解决**：
-- 删除 `prisma/migrations` 文件夹
-- 修改 `shopify.web.toml`，将 `migrate deploy` 改为 `db push`
-
-### 5. shopify.web.toml 配置
-
-```toml
-[commands]
-predev = "npx prisma generate"
-dev = "npx prisma db push && npm exec react-router dev"
-```
-
-**注意**：开发环境使用 `db push`，不要用 `migrate deploy`
-
-### 6. 迁移文件问题
-
-如果数据库已有失败的迁移：
-1. 删除 `prisma/migrations` 文件夹
-2. 重新部署，让 `db push` 创建表
-
-## 快速部署命令
+### 3. 推送代码
 
 ```bash
-# 本地修改后
-git add .
-git commit -m "Update deployment config"
 git push
-
-# Vercel 自动构建：
-# 1. npm install (触发 postinstall: prisma generate)
-# 2. npm run build (prisma generate + react-router build)
-# 3. npx prisma db push (创建数据库表)
 ```
 
-## migrate deploy vs db push 对比
+Vercel 会自动执行：
 
-| 命令 | 用途 | 特点 |
-|------|------|------|
-| `prisma migrate deploy` | 应用迁移文件 | 需要迁移文件夹，可能有 SQL 兼容问题 |
-| `prisma db push` | 直接同步 schema | 不需要迁移文件，自动适配数据库类型 |
+1. `npm install`
+2. `npm run build`
+3. `npx prisma db push`
 
-**推荐**：开发环境使用 `db push`，更简单顺畅
+## Prisma 相关注意事项
 
-## 常见错误排查
+### 为什么这里使用 db push
 
-### 1. 500 Application Error
-- 检查 Vercel 函数日志
-- 确认 DATABASE_URL 环境变量已配置
-- 确认数据库表已创建（运行 `npx prisma db push`）
+当前仓库开发与部署流程都倾向直接同步 schema：
 
-### 2. process is not defined
-- `process.env` 只在服务端代码（loader/action）中可用
-- 客户端组件中使用会报错
+- 避免历史迁移与数据库状态漂移造成部署失败
+- 与 `shopify.web.toml` 的本地开发流程保持一致
+- 对当前体量的项目更直接
 
-### 3. P3009 迁移失败
-- 删除 `prisma/migrations` 文件夹
-- 使用 `db push` 而非 `migrate deploy`
+### Prisma 环境变量加载
 
-## 验证部署成功
+仓库使用 [prisma.config.ts](../prisma.config.ts) 显式控制 Prisma CLI 的环境变量加载顺序：
 
-1. 访问 `https://your-app.vercel.app` 无 500 错误
-2. Shopify 后台打开 App 正常显示
-3. 数据库有 Session 表（可用 Prisma Studio 验证）
+1. 先加载 `.env`
+2. 再加载 `.env.local`
+
+线上环境通常不需要 `.env.local`，以 Vercel 环境变量为准。
+
+## 常见问题排查
+
+### 1. 部署后应用 500
+
+优先检查：
+
+- `DATABASE_URL` 是否有效
+- `prisma db push` 是否执行成功
+- Vercel Function 日志中是否存在 Prisma 初始化错误
+
+### 2. Shopify 后台无法正常打开应用
+
+通常需要排查：
+
+- `SHOPIFY_APP_URL` 与 `shopify.app.toml` 的 `application_url` 是否一致
+- `[auth].redirect_urls` 是否指向正确的 `/api/auth`
+- 线上域名是否已经同步到 Shopify 应用配置
+
+### 3. 部署时 Prisma 连到了错误的数据库
+
+如果 Prisma 指向了不期望的实例，先检查：
+
+- Vercel 中的 `DATABASE_URL`
+- 是否残留了其他环境变量覆盖
+- `prisma.config.ts` 是否与预期的加载顺序一致
+
+### 4. 嵌入式页面报 origin 或 iframe 错误
+
+这类问题往往不是 Vercel 构建错误，而是 Shopify 应用配置与线上域名不一致导致。优先校验 app URL、auth redirect URL 和当前访问域名是否完全一致。
+
+## 验证清单
+
+部署完成后至少检查：
+
+1. 访问首页无 500 错误
+2. Shopify 后台能正常打开 `/app`
+3. `/app/reseller-applications` 能正常加载列表
+4. 数据库中已存在 Session 表及业务表
+5. 公开接口 `/api/public/reseller-applications` 可正常写入数据

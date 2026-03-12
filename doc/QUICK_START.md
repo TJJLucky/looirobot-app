@@ -1,262 +1,145 @@
 # 快速开始指南
 
-## 🚀 已完成的结构改造
+## 1. 环境要求
 
-您的项目已经升级为模块化、可维护的架构！以下是新增的文件和功能：
+开始前请先准备：
 
-### 📂 新增文件结构
+- Node.js 20.19 或更高版本
+- npm
+- Shopify CLI
+- PostgreSQL
+- Docker Desktop，若你希望直接使用仓库自带的本地数据库
 
-```
-✅ prisma/
-   ├── models/              # Schema 模块（真正的多文件支持）
-   │   ├── auth.prisma
-   │   └── application.prisma
-   ├── schema.prisma        # generator + datasource
-   └── README.md            # Prisma 使用文档
-
-✅ app/
-   ├── services/            # 服务层（业务逻辑）
-   │   ├── index.ts
-   │   ├── session.service.ts
-   │   └── reseller-application.service.ts
-   │
-   ├── types/               # 类型中转与统一导出
-   │   ├── index.ts
-   │   ├── common.model.ts
-   │   ├── session.model.ts
-   │   └── reseller-application.model.ts
-   │
-   └── routes/
-       ├── api.reseller-applications.tsx  # 示例 API
-       └── api.upload.tsx                 # 上传代理 API
-
-✅ doc/
-   └── ARCHITECTURE.md      # 架构文档
-```
-
-## 📖 使用示例
-
-### 1. 在路由中使用服务层
-
-```typescript
-// 在任何路由文件中
-import { resellerApplicationService } from "../services";
-
-// GET 请求
-export const loader = async () => {
-  const applications = await resellerApplicationService.findAll();
-  return json({ data: applications });
-};
-
-// POST 请求
-export const action = async ({ request }) => {
-  const data = await request.json();
-  const result = await resellerApplicationService.create(data);
-  return json({ success: true, data: result });
-};
-```
-
-### 2. 使用类型定义
-
-```typescript
-import type { 
-  ResellerApplicationType,
-  ApiResponse,
-  PaginatedResult 
-} from "../types";
-
-// 类型安全的响应
-const response: ApiResponse<ResellerApplicationType> = {
-  success: true,
-  data: application,
-};
-```
-
-### 3. 数据库操作快捷命令
+## 2. 安装依赖
 
 ```bash
-# 生成 Prisma Client（类型定义）
-npm run db:generate
+npm install
+```
 
-# 创建数据库迁移
-npm run db:migrate
+## 3. 配置环境变量
 
-# 直接推送 Schema 到数据库（开发环境）
+在项目根目录准备 `.env`，本地开发可额外使用 `.env.local` 覆盖。
+
+最少需要：
+
+```env
+SHOPIFY_API_KEY=
+SHOPIFY_API_SECRET=
+SHOPIFY_APP_URL=
+SCOPES=write_metaobject_definitions,write_metaobjects,write_products
+DATABASE_URL=
+```
+
+说明：
+
+- Prisma CLI 会读取 `prisma.config.ts`
+- 环境变量加载顺序是 `.env` 然后 `.env.local`
+- 本地开发如果不想误连线上数据库，应把本地 `DATABASE_URL` 放到 `.env.local`
+
+## 4. 启动数据库
+
+### 方案 A：使用本地 Docker PostgreSQL
+
+```bash
+npm run db:local:up
+```
+
+### 方案 B：使用外部数据库
+
+直接确保 `DATABASE_URL` 指向可访问的 PostgreSQL 实例即可。
+
+## 5. 同步 Prisma Schema
+
+```bash
 npm run db:push
+```
 
-# 打开 Prisma Studio（可视化数据库管理）
+如果你需要开发迁移而不是直接推送，可使用：
+
+```bash
+npm run db:migrate
+```
+
+## 6. 启动开发环境
+
+```bash
+npm run dev
+```
+
+说明：
+
+- `npm run dev` 实际执行 `shopify app dev`
+- `shopify.web.toml` 中会先执行 `prisma generate`，再执行 `prisma db push` 和 `react-router dev`
+- `shopify.app.toml` 已开启 `automatically_update_urls_on_dev = true`，Shopify CLI 会在开发时自动写入新的 tunnel 地址
+
+如果希望一条命令带起本地数据库与应用，可以使用：
+
+```bash
+npm run dev:local
+```
+
+## 7. 核心页面与接口
+
+### 后台页面
+
+- `/app`
+- `/app/reseller-applications`
+- `/app/reseller-applications/:id`
+
+### 管理端 API
+
+- `GET /api/admin/reseller-applications`
+- `GET /api/admin/reseller-applications/:id`
+- `PUT /api/admin/reseller-applications/:id`
+- `DELETE /api/admin/reseller-applications/:id`
+- `PUT /api/admin/reseller-applications/status/:id`
+
+### 公开 API
+
+- `POST /api/public/reseller-applications`
+- `POST /api/public/upload`
+
+## 8. 常用命令
+
+```bash
+npm run lint
+npm run typecheck
+npm run build
+npm run db:generate
 npm run db:studio
-
-# 检查迁移状态
 npm run db:status
-
-# 重置数据库（慎用！会删除所有数据）
 npm run db:reset
 ```
 
-## ✨ API 端点示例
+## 9. 常见问题
 
-### 经销商申请 API
+### Shopify 嵌入页出现 origin 不匹配、403 或 iframe 错误
 
-**端点**: `/api/reseller-applications`
+优先检查是否通过 `shopify app dev` 启动，并使用 CLI 自动生成的开发地址。开发环境不要手动复用生产域名。
 
-#### GET - 查询列表
-```bash
-# 获取所有申请（分页）
-GET /api/reseller-applications?page=1&pageSize=20
+### `prisma db push` 指向了错误的数据库
 
-# 根据邮箱查询
-GET /api/reseller-applications?email=test@example.com
-```
+先检查 `prisma.config.ts` 是否读取到了 `.env.local`，再确认 `DATABASE_URL` 是否被本地值覆盖。
 
-**响应示例**：
-```json
-{
-  "success": true,
-  "data": {
-    "data": [...],
-    "total": 100,
-    "page": 1,
-    "pageSize": 20,
-    "totalPages": 5
-  }
-}
-```
+### fetch 返回 HTML，前端 JSON 解析失败
 
-#### POST - 创建申请
-```bash
-POST /api/reseller-applications
-Content-Type: application/json
+项目使用 React Router flat routes。若 API 文件命名不符合点式规则，实际会命中 404 HTML 页面，前端会看到 `Unexpected token '<'`。
 
-{
-  "firstName": "张",
-  "lastName": "三",
-  "email": "zhangsan@example.com",
-  "phoneNumberPrefix": "+86",
-  "phoneNumber": "13800138000",
-  "companyName": "示例公司",
-  "companySize": "50-100",
-  "jobTitle": "采购经理",
-  "country": "中国",
-  "mainProductsAndBrands": "智能硬件、消费电子",
-  "looiAnnualProjectedSales": "1000-5000",
-  "technicianScaleAndAfterSalesProcess": "10人技术团队",
-  "files": [
-    "https://example.com/file1.pdf",
-    "https://example.com/file2.pdf"
-  ]
-}
-```
+### Windows 下 Prisma 引擎异常
 
-**响应示例**：
-```json
-{
-  "success": true,
-  "data": { ...创建的申请数据... },
-  "message": "申请提交成功"
-}
-```
-
-#### PUT - 更新申请
-```bash
-PUT /api/reseller-applications
-Content-Type: application/json
-
-{
-  "id": 1,
-  "companySize": "100-200"
-}
-```
-
-#### DELETE - 删除申请
-```bash
-DELETE /api/reseller-applications
-Content-Type: application/json
-
-{
-  "id": 1
-}
-```
-
-## 🎯 开发工作流
-
-### 场景 1：添加新的数据表
-
-1. **在 `models/` 中创建新文件**
-   ```bash
-   # 创建新的模型文件
-   touch prisma/models/product.prisma
-   ```
-
-2. **编写模型定义**
-   ```prisma
-   // prisma/models/product.prisma
-   
-   model Product {
-     id        Int      @id @default(autoincrement())
-     title     String
-     price     Float
-     createdAt DateTime @default(now())
-   }
-   ```
-
-3. **运行迁移**
-   ```bash
-   npm run db:migrate
-   # 输入迁移名称：add_product_table
-   ```
-
-4. **自动生效** - Prisma 6+ 原生支持多文件，无需额外配置
-
-### 场景 2：测试 API
-
-使用 Prisma Studio 查看和管理数据：
+如果出现 Prisma Query Engine 兼容问题，可尝试设置：
 
 ```bash
-npm run db:studio
+PRISMA_CLIENT_ENGINE_TYPE=binary
 ```
 
-浏览器会自动打开 `http://localhost:5555`，您可以：
-- 📋 查看所有表和数据
-- ➕ 手动添加测试数据
-- ✏️ 编辑现有数据
-- 🗑️ 删除数据
+## 10. 下一步
 
-## 📚 核心概念
+完成基础启动后，建议继续查看：
 
-### 服务层的职责
-
-✅ **负责**：
-- 数据库 CRUD 操作
-- 业务逻辑处理
-- 数据验证
-- 复杂查询封装
-
-❌ **不负责**：
-- HTTP 请求/响应处理（由路由层处理）
-- 身份验证（由中间件处理）
-- 视图渲染
-
-### 路由层的职责
-
-✅ **负责**：
-- 处理 HTTP 请求
-- 调用服务层方法
-- 返回 JSON 响应
-- 错误处理
-
-❌ **不负责**：
-- 直接操作数据库
-- 复杂的业务逻辑
-
-## 🔍 调试技巧
-
-### 1. 查看生成的 SQL
-```typescript
-// 在任何服务方法中
-const result = await prisma.product.findMany();
-console.log(result); // 查看查询结果
-```
+- `doc/ARCHITECTURE.md`
+- `doc/PROJECT_STRUCTURE.md`
+- `prisma/README.md`
 
 ### 2. 使用 Prisma Client 扩展
 ```typescript

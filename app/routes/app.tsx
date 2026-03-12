@@ -44,6 +44,7 @@ export default function App() {
       {/* 导航栏 */}
       <s-app-nav>
         <s-link href="/app">Home</s-link>
+        <s-link href="/app/reseller-applications">经销商申请</s-link>
       </s-app-nav>
       {/* 子路由出口 - 渲染 /app 下的子页面 */}
       <Outlet />
