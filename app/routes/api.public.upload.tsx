@@ -10,8 +10,7 @@ import {
   jsonWithPublicCors,
 } from "../utils/cors.server";
 
-const UPLOAD_API_URL =
-  "https://test.tangiblefuturelab.com/shopifySource/upload";
+const UPLOAD_API_URL = "http://admin-test.looirobot.com/shopifySource/upload";
 
 interface UploadResponseData {
   createTime: string;
