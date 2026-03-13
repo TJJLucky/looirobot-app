@@ -132,8 +132,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         code: 500,
         success: false,
         error: "Upload failed",
-        message:
-          error instanceof Error ? error.message : "文件上传失败，请稍后重试",
+        message: "Upload failed",
       } as ApiResponse,
       500,
     );
