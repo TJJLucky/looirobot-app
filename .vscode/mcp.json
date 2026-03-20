@@ -1,0 +1,13 @@
+{
+    "mcpServers": {
+        "shopify-storefront": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@shopify/storefront-mcp@latest",
+                "--shop",
+                "${SHOPIFY_SHOP}"
+            ]
+        }
+    }
+}
